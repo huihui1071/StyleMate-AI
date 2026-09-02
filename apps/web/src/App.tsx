@@ -11,16 +11,6 @@ const FALLBACK_MEMBERS: Member[] = [
   { id: "M-DEMO-04", name: "访客模式", tier: null, points: 0, subscription_status: "unknown" },
 ];
 
-const WELCOME: Advice = {
-  intent: "product_search",
-  message: "告诉我你要去哪里、想穿成什么感觉，以及不能妥协的条件。我会先做硬筛选，再解释每个选择。",
-  products: [],
-  outfit: null,
-  subscription: null,
-  evidence: ["演示数据: 100% 合成", "推荐上限: 8 款", "硬条件: 不自动放宽"],
-  handoff: null,
-};
-
 const QUICK_TASKS = [
   { label: "通勤选款", text: "想找一件春季通勤的灰色宽松外套，预算1500元以内" },
   { label: "指定款搭配", text: "用SKU-DEMO-010搭一套周末出行，预算3000元以内" },
@@ -115,12 +105,12 @@ function ProductArt({ product, compact = false }: { product: Product; compact?: 
   );
 }
 
-function ProductTile({ product, onSelect }: { product: Product; onSelect: (item: Product) => void }) {
+function ProductTile({ product }: { product: Product }) {
   return (
     <article className="product-tile">
-      <button className="product-tile__visual" onClick={() => onSelect(product)} aria-label={`查看${product.name}详情`}>
+      <div className="product-tile__visual">
         <ProductArt product={product} />
-      </button>
+      </div>
       <div className="product-tile__meta">
         <div>
           <span>{product.brand} · {product.category}</span>
@@ -129,7 +119,16 @@ function ProductTile({ product, onSelect }: { product: Product; onSelect: (item:
         <b>{formatCurrency(product.price)}</b>
       </div>
       {product.reasons?.length ? <p>{product.reasons[0]}</p> : <p>{product.color} · {product.fit}</p>}
-      <button className="text-action" onClick={() => onSelect(product)}>查看依据 <ArrowIcon /></button>
+      <details className="product-detail">
+        <summary>查看商品详情</summary>
+        <dl>
+          <div><dt>面料</dt><dd>{product.material}</dd></div>
+          <div><dt>版型</dt><dd>{product.silhouette} · {product.fit}</dd></div>
+          <div><dt>工艺</dt><dd>{product.craft}</dd></div>
+          <div><dt>风格</dt><dd>{product.styles.join(" / ")}</dd></div>
+        </dl>
+        <p>{product.description}</p>
+      </details>
     </article>
   );
 }
@@ -139,22 +138,20 @@ function SubscriptionNotice({ advice }: { advice: NonNullable<Advice["subscripti
     <section className="subscription-notice" aria-label="BOX+会员提示">
       <div className="subscription-notice__mark">B+</div>
       <div>
-        <p className="eyebrow">MEMBERSHIP MOMENT</p>
         <h3>{advice.title}</h3>
-        <ul>{advice.messages.map((message) => <li key={message}>{message}</li>)}</ul>
+        <p>{advice.messages.join(" · ")}</p>
         <button className="quiet-button">{advice.cta}</button>
       </div>
     </section>
   );
 }
 
-function AssistantResponse({ advice, onSelect }: { advice: Advice; onSelect: (product: Product) => void }) {
+function AssistantResponse({ advice }: { advice: Advice }) {
   const items = advice.outfit?.items ?? advice.products;
   return (
     <article className="assistant-response">
       <header className="response-heading">
         <span>{intentLabel(advice.intent)}</span>
-        <span>RULE-GROUNDED</span>
       </header>
       <p className="response-copy">{advice.message}</p>
 
@@ -163,7 +160,7 @@ function AssistantResponse({ advice, onSelect }: { advice: Advice; onSelect: (pr
           {items.map((product, index) => (
             <div className={advice.outfit ? `outfit-item outfit-item--${index + 1}` : ""} key={product.sku}>
               {advice.outfit && <span className="outfit-role">{index === 0 ? "01 主单品" : `0${index + 1} 搭配`}</span>}
-              <ProductTile product={product} onSelect={onSelect} />
+              <ProductTile product={product} />
             </div>
           ))}
         </div>
@@ -191,6 +188,16 @@ function AssistantResponse({ advice, onSelect }: { advice: Advice; onSelect: (pr
           <span>{advice.handoff.reason}</span>
         </section>
       )}
+
+      {advice.evidence.length > 0 && (
+        <details className="decision-proof">
+          <summary>为什么这样推荐</summary>
+          <div className="decision-proof__content">
+            <ol>{advice.evidence.map((item) => <li key={item}>{item}</li>)}</ol>
+            <p>先执行硬条件筛选，再按偏好排序；缺失信息不会被补造。</p>
+          </div>
+        </details>
+      )}
     </article>
   );
 }
@@ -198,18 +205,14 @@ function AssistantResponse({ advice, onSelect }: { advice: Advice; onSelect: (pr
 function App() {
   const [members, setMembers] = useState<Member[]>(FALLBACK_MEMBERS);
   const [memberId, setMemberId] = useState("M-DEMO-01");
-  const [messages, setMessages] = useState<ThreadItem[]>([{ id: "welcome", role: "assistant", advice: WELCOME }]);
+  const [messages, setMessages] = useState<ThreadItem[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [apiOnline, setApiOnline] = useState<boolean | null>(null);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const threadEnd = useRef<HTMLDivElement>(null);
 
   const currentMember = useMemo(() => members.find((member) => member.id === memberId) ?? members[0], [members, memberId]);
-  const latestAdvice = useMemo(
-    () => [...messages].reverse().find((item): item is Extract<ThreadItem, { role: "assistant" }> => item.role === "assistant")?.advice ?? WELCOME,
-    [messages],
-  );
+  const hasStarted = messages.length > 0;
 
   useEffect(() => {
     Promise.all([
@@ -237,7 +240,6 @@ function App() {
     setMessages((existing) => [...existing, userMessage]);
     setInput("");
     setLoading(true);
-    setSelectedProduct(null);
     try {
       const subscriptionAlreadyShown = messages.some((item) => item.role === "assistant" && Boolean(item.advice.subscription));
       const response = await fetch(`${API_BASE}/api/chat`, {
@@ -286,71 +288,72 @@ function App() {
         <a className="wordmark" href="#main" aria-label="StyleMate AI 首页">
           <span>SM</span>
           <strong>STYLEMATE</strong>
-          <em>AI RETAIL ASSOCIATE</em>
+          <em>智能时尚顾问</em>
         </a>
-        <div className="topbar__status">
-          <span className={`status-dot ${apiOnline === false ? "status-dot--off" : ""}`} />
-          {apiOnline === null ? "检测服务" : apiOnline ? "演示服务在线" : "API 未连接"}
+        <div className="topbar__actions">
+          <span className="service-status" title={apiOnline === null ? "正在检测服务" : apiOnline ? "服务在线" : "API 未连接"}>
+            <span className={`status-dot ${apiOnline === false ? "status-dot--off" : ""}`} />
+            {apiOnline === false ? "服务未连接" : "服务在线"}
+          </span>
+          <label className="member-control" htmlFor="member">
+            <span>为</span>
+            <select id="member" value={memberId} onChange={(event) => setMemberId(event.target.value)}>
+              {members.map((member) => <option value={member.id} key={member.id}>{member.name}</option>)}
+            </select>
+            <span>推荐</span>
+          </label>
         </div>
-        <div className="topbar__meta"><span>v0.1</span><span>合成数据</span></div>
       </header>
 
-      <aside className="left-rail" aria-label="演示导航">
-        <div className="rail-section">
-          <p className="eyebrow">CAPABILITIES</p>
-          <ol className="capability-list">
-            <li className="active"><span>01</span><strong>智能导购</strong><small>硬筛选 + 重排</small></li>
-            <li><span>02</span><strong>搭配顾问</strong><small>属性关系 + 预算</small></li>
-            <li><span>03</span><strong>会员顾问</strong><small>规则时机 + 权益</small></li>
-          </ol>
-        </div>
-        <div className="rail-section rail-section--member">
-          <label htmlFor="member">虚构会员身份</label>
-          <select id="member" value={memberId} onChange={(event) => setMemberId(event.target.value)}>
-            {members.map((member) => <option value={member.id} key={member.id}>{member.name}</option>)}
-          </select>
-          <div className="member-snapshot">
-            <span>{currentMember?.tier ?? "ANONYMOUS"}</span>
-            <strong>{currentMember?.points.toLocaleString("zh-CN") ?? 0}</strong>
-            <small>可用积分 · 演示</small>
-          </div>
-        </div>
-        <div className="privacy-stamp">
-          <span>PRIVATE DATA</span><strong>0</strong><small>NO SOURCE FILES</small>
-        </div>
-      </aside>
-
       <main className="workspace" id="main">
-        <section className="workspace-intro">
-          <div>
-            <p className="eyebrow">CONVERSATION 001 · DECISION TRACE ON</p>
-            <h1>把需求变成<br /><i>可验证的选择。</i></h1>
-          </div>
-          <p>商品事实来自结构化数据，会员权益由规则引擎计算。模型负责理解和表达，不替你改条件。</p>
-        </section>
+        {!hasStarted && (
+          <section className="welcome-stage">
+            <p className="welcome-stage__member">已结合 {currentMember?.name} 的尺码、风格偏好与会员状态</p>
+            <h1>今天想怎么穿？</h1>
+            <p className="welcome-stage__copy">描述场合、风格、版型或预算，我会筛出合适单品，也能围绕指定款完成整套搭配。</p>
+            <form className="composer composer--welcome" onSubmit={onSubmit}>
+              <div>
+                <textarea
+                  id="message-welcome"
+                  value={input}
+                  onChange={(event) => setInput(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && !event.shiftKey) {
+                      event.preventDefault();
+                      void submit(input);
+                    }
+                  }}
+                  rows={2}
+                  placeholder="例如：想找一件春季通勤的灰色宽松外套，预算 1500 元以内"
+                  aria-label="描述你的穿搭需求"
+                />
+                <button type="submit" disabled={!input.trim() || loading}>开始推荐 <ArrowIcon /></button>
+              </div>
+            </form>
+            <div className="quick-tasks" aria-label="需求示例">
+              <span>也可以直接试试</span>
+              {QUICK_TASKS.map((task) => (
+                <button key={task.label} onClick={() => void submit(task.text)} disabled={loading}>
+                  {task.label}<ArrowIcon />
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
 
-        <div className="quick-tasks" aria-label="快速演示任务">
-          {QUICK_TASKS.map((task) => (
-            <button key={task.label} onClick={() => void submit(task.text)} disabled={loading}>
-              <span>{task.label}</span><ArrowIcon />
-            </button>
-          ))}
-        </div>
-
-        <section className="thread" aria-live="polite" aria-label="导购对话">
+        {hasStarted && <section className="thread" aria-live="polite" aria-label="导购对话">
           {messages.map((item) => item.role === "user" ? (
-            <div className="user-message" key={item.id}><span>YOU</span><p>{item.text}</p></div>
+            <div className="user-message" key={item.id}><span>你的需求</span><p>{item.text}</p></div>
           ) : (
-            <AssistantResponse key={item.id} advice={item.advice} onSelect={setSelectedProduct} />
+            <AssistantResponse key={item.id} advice={item.advice} />
           ))}
           {loading && (
             <div className="thinking" role="status"><SparkIcon /><span>正在解析硬条件与业务规则</span><i /><i /><i /></div>
           )}
           <div ref={threadEnd} />
-        </section>
+        </section>}
 
-        <form className="composer" onSubmit={onSubmit}>
-          <label htmlFor="message">继续补充条件</label>
+        {hasStarted && <form className="composer composer--followup" onSubmit={onSubmit}>
           <div>
             <textarea
               id="message"
@@ -363,52 +366,14 @@ function App() {
                 }
               }}
               rows={2}
-              placeholder="例如：第二款换成深色，整套控制在 3000 元以内"
+              placeholder="继续补充：换成深色，或把整套控制在 3000 元以内"
             />
-            <button type="submit" disabled={!input.trim() || loading} aria-label="发送需求"><ArrowIcon /></button>
+            <button type="submit" disabled={!input.trim() || loading} aria-label="发送需求">发送 <ArrowIcon /></button>
           </div>
-          <p>Enter 发送 · Shift + Enter 换行 · 所有人物与商品均为虚构</p>
-        </form>
+          <p>Enter 发送 · Shift + Enter 换行</p>
+        </form>}
       </main>
-
-      <aside className="context-rail" aria-label="决策依据">
-        <header><span>DECISION TRACE</span><b>{intentLabel(latestAdvice.intent)}</b></header>
-        {selectedProduct ? (
-          <section className="selected-detail">
-            <button className="close-detail" onClick={() => setSelectedProduct(null)}>返回决策依据</button>
-            <ProductArt product={selectedProduct} compact />
-            <p className="eyebrow">{selectedProduct.sku}</p>
-            <h2>{selectedProduct.name}</h2>
-            <strong>{formatCurrency(selectedProduct.price)}</strong>
-            <dl>
-              <div><dt>面料</dt><dd>{selectedProduct.material}</dd></div>
-              <div><dt>版型</dt><dd>{selectedProduct.silhouette} · {selectedProduct.fit}</dd></div>
-              <div><dt>工艺</dt><dd>{selectedProduct.craft}</dd></div>
-              <div><dt>风格</dt><dd>{selectedProduct.styles.join(" / ")}</dd></div>
-            </dl>
-            <p>{selectedProduct.description}</p>
-          </section>
-        ) : (
-          <>
-            <section className="trace-block">
-              <p className="eyebrow">CONFIRMED</p>
-              {latestAdvice.evidence.map((item, index) => (
-                <div className="trace-row" key={item}><span>{String(index + 1).padStart(2, "0")}</span><p>{item}</p></div>
-              ))}
-            </section>
-            <section className="trace-block">
-              <p className="eyebrow">GUARDRAILS</p>
-              <div className="guardrail"><span>硬条件违规</span><strong>0</strong></div>
-              <div className="guardrail"><span>事实补造</span><strong>0</strong></div>
-              <div className="guardrail"><span>外部操作</span><strong>禁用</strong></div>
-            </section>
-            <section className="system-note">
-              <SparkIcon />
-              <p><strong>为什么可信</strong>先过滤，再排序；缺失信息显示未知；交易与售后转人工。</p>
-            </section>
-          </>
-        )}
-      </aside>
+      <footer className="app-footer">商品与人物均为虚构 · 推荐依据可随时展开查看</footer>
     </div>
   );
 }
