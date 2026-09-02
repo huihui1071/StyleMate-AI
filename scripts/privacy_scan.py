@@ -7,7 +7,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SKIP_DIRS = {".git", "node_modules", "dist", ".venv", "__pycache__", ".pytest_cache"}
+SKIP_DIRS = {".git", ".private", "node_modules", "dist", ".venv", "__pycache__", ".pytest_cache"}
 SKIP_FILES = {"package-lock.json"}
 FORBIDDEN_EXTENSIONS = {".xlsx", ".xls", ".pdf", ".docx", ".pptx"}
 ALLOWED_URL_PREFIXES = ("http://localhost", "http://127.0.0.1", "http://api:")
