@@ -1,0 +1,19 @@
+{
+  "service_name": "BOX+",
+  "version": "demo-2026-01",
+  "annual_box_count": 6,
+  "shipping": "双向包邮",
+  "gift_nodes": [1, 3, 6],
+  "exchange_threshold": 4000,
+  "tiers": {
+    "Tier_Gold": {"points": 3888, "cash": 199},
+    "Tier_Silver": {"points": 3990, "cash": 399}
+  },
+  "first_box_coupons": {"value": 100, "count": 2},
+  "auto_renew": {
+    "new_member_current_points_rate": 0.5,
+    "new_member_next_cycle_rate": 0.9,
+    "existing_member_next_cycle_rate": 0.5
+  }
+}
+
