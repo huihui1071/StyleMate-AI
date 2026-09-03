@@ -74,6 +74,12 @@ npm run dev:web
 docker compose up --build
 ```
 
+## 在线部署
+
+仓库根目录提供单服务 `Dockerfile` 和 `render.yaml`，可作为 Render Blueprint 直接部署。部署时会先构建 React 前端，再由 FastAPI 同域提供官网、Demo、商品图片和推荐接口。
+
+部署后的健康检查地址为 `/api/health`。免费实例在一段时间没有访问后可能休眠，首次打开需要等待服务唤醒。
+
 ## 验证
 
 ```bash

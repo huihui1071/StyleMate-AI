@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from .engine import MEMBERS, PRODUCTS, handle_request
@@ -57,3 +59,22 @@ def chat(payload: ChatRequest) -> dict[str, object]:
         payload.mode,
         payload.subscription_already_shown,
     )
+
+
+# In production the Vite build is copied into this directory. Keeping the SPA
+# and API on one origin makes the portfolio demo deployable as a single service.
+WEB_DIST = Path(__file__).resolve().parents[1] / "web" / "dist"
+
+if WEB_DIST.is_dir():
+    web_root = WEB_DIST.resolve()
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    def serve_web_app(full_path: str) -> FileResponse:
+        if full_path.startswith("api/"):
+            raise HTTPException(status_code=404, detail="API route not found")
+
+        requested_file = (web_root / full_path).resolve()
+        if requested_file.is_relative_to(web_root) and requested_file.is_file():
+            return FileResponse(requested_file)
+
+        return FileResponse(web_root / "index.html")
