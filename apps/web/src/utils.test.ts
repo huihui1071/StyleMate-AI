@@ -1,13 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { formatCurrency, intentLabel } from "./utils";
+import { formatCurrency, formatPercent, intentLabel } from "./utils";
 
 describe("display helpers", () => {
   it("formats CNY without decimals", () => {
-    expect(formatCurrency(1390)).toContain("1,390");
+    expect(formatCurrency(19839)).toContain("19,839");
   });
 
-  it("maps known intents", () => {
-    expect(intentLabel("outfit")).toBe("搭配顾问");
-    expect(intentLabel("unknown")).toBe("导购任务");
+  it("formats margin rates", () => {
+    expect(formatPercent(0.558)).toContain("56");
+  });
+
+  it("maps B2B workflow intents", () => {
+    expect(intentLabel("assortment")).toBe("组货方案");
+    expect(intentLabel("unknown")).toBe("选款任务");
   });
 });

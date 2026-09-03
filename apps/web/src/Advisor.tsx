@@ -1,23 +1,25 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import type { Advice, Member, Product, ThreadItem } from "./types";
-import { formatCurrency, intentLabel } from "./utils";
+import type { Advice, Merchant, Product, SelectionItem } from "./types";
+import { formatCurrency, formatPercent, intentLabel } from "./utils";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
 
-const FALLBACK_MEMBERS: Member[] = [
-  { id: "M-DEMO-01", name: "林澄", tier: "Tier_Silver", points: 4260, subscription_status: "not_subscribed" },
-  { id: "M-DEMO-02", name: "周岚", tier: "Tier_Gold", points: 5129, subscription_status: "subscribed" },
-  { id: "M-DEMO-03", name: "沈屿", tier: "Tier_Gold", points: 2795, subscription_status: "not_subscribed" },
-  { id: "M-DEMO-04", name: "访客模式", tier: null, points: 0, subscription_status: "unknown" },
+const FALLBACK_MERCHANTS: Merchant[] = [
+  { id: "MERCHANT-DEMO-01", name: "北岸通勤店", platform: "淘宝", business_stage: "成长店铺", target_customer: "25–35 岁城市上班族", price_band: { min: 300, max: 700 }, tier: "成长商家", default_budget: 30000, discount_rate: 0.97, sample_quota: 6 },
+  { id: "MERCHANT-DEMO-02", name: "栖野内容店", platform: "抖音电商", business_stage: "内容起量期", target_customer: "20–30 岁休闲与街头女性", price_band: { min: 199, max: 499 }, tier: "新锐商家", default_budget: 18000, discount_rate: 1, sample_quota: 3 },
+  { id: "MERCHANT-DEMO-03", name: "留白买手店", platform: "小红书店铺", business_stage: "稳定经营", target_customer: "关注设计与材质表达的城市客群", price_band: { min: 600, max: 1500 }, tier: "合作商家", default_budget: 50000, discount_rate: 0.94, sample_quota: 10 },
+  { id: "MERCHANT-DEMO-04", name: "童趣集合店", platform: "淘宝", business_stage: "首批选款", target_customer: "注重舒适度与设计感的亲子家庭", price_band: { min: 199, max: 699 }, tier: "新商家", default_budget: 22000, discount_rate: 1, sample_quota: 2 },
 ];
 
-export const QUICK_TASKS = [
-  { label: "通勤选款", text: "想找一件春季通勤的灰色宽松外套，预算1500元以内" },
-  { label: "指定款搭配", text: "用SKU-DEMO-010搭一套周末出行，预算3000元以内" },
-  { label: "查看会员权益", text: "看看我的积分和BOX+权益" },
-];
+const QUICK_TASKS = [
+  { label: "春季首批组货", mode: "assortment", text: "我在淘宝做女性通勤装，零售价300-700元，想选12款春季新品，首批采购预算3万" },
+  { label: "低 MOQ 选款", mode: "selection", text: "帮我选女装春季上装，零售价300-700元，起订量不超过4件" },
+  { label: "查看拿货政策", mode: "account", text: "查看当前商家的拿货政策、折扣和样衣额度" },
+] as const;
 
-export function ArrowIcon() {
+const FLOW_STEPS = ["商家画像", "选款", "组货", "采购清单", "销售接管"];
+
+function ArrowIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path d="M5 12h13M13 6l6 6-6 6" />
@@ -25,297 +27,372 @@ export function ArrowIcon() {
   );
 }
 
-function SparkIcon() {
+function ProductCard({ product, selected, onAdd }: { product: Product; selected: boolean; onAdd: (product: Product) => void }) {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M12 2c.8 5.2 3 7.4 8 8-5 .8-7.2 3-8 8-.8-5-3-7.2-8-8 5-.6 7.2-2.8 8-8Z" />
-      <path d="M19 15c.3 2 1.1 2.8 3 3-1.9.3-2.7 1.1-3 3-.3-1.9-1.1-2.7-3-3 1.9-.2 2.7-1 3-3Z" />
-    </svg>
-  );
-}
-
-export function ProductArt({ product, compact = false }: { product: Product; compact?: boolean }) {
-  return (
-    <div className={`product-art ${compact ? "product-art--compact" : ""}`}>
-      <span className="product-art__index">{product.sku.slice(-3)}</span>
-      <img src={product.image} alt={`${product.name}商品实拍图`} loading="lazy" decoding="async" />
-      <span className="product-art__material">{product.material}</span>
-    </div>
-  );
-}
-
-function ProductTile({ product }: { product: Product }) {
-  return (
-    <article className="product-tile">
-      <div className="product-tile__visual">
-        <ProductArt product={product} />
+    <article className="sku-card">
+      <div className="sku-card__image">
+        <img src={product.image} alt={`${product.name}商品实拍图`} loading="lazy" decoding="async" />
+        <span>{product.selection_role ?? product.default_role}</span>
+        <b>{product.sku.slice(-3)}</b>
       </div>
-      <div className="product-tile__meta">
+      <div className="sku-card__heading">
         <div>
-          <span>{product.brand} · {product.category}</span>
-          <strong>{product.name}</strong>
+          <small>{product.line} · {product.category}</small>
+          <h3>{product.name}</h3>
         </div>
-        <b>{formatCurrency(product.price)}</b>
+        <span className={`risk risk--${product.risk_level}`}>风险 {product.risk_level}</span>
       </div>
-      {product.reasons?.length ? <p>{product.reasons[0]}</p> : <p>{product.color} · {product.fit}</p>}
-      <details className="product-detail">
-        <summary>查看商品详情</summary>
+      <dl className="sku-commercials">
+        <div><dt>供货</dt><dd>{formatCurrency(product.net_unit_cost ?? product.wholesale_price)}</dd></div>
+        <div><dt>建议零售</dt><dd>{formatCurrency(product.suggested_retail_price)}</dd></div>
+        <div><dt>毛利空间</dt><dd>{formatPercent(product.margin_rate)}</dd></div>
+      </dl>
+      <div className="sku-supply">
+        <span>库存 {product.stock}</span>
+        <span>MOQ {product.moq}</span>
+        <span>{product.lead_time_days} 天发货</span>
+      </div>
+      {product.reasons?.length ? <p className="sku-reason">{product.reasons[0]}</p> : null}
+      <button className="add-selection" onClick={() => onAdd(product)} disabled={selected}>
+        {selected ? "已加入选款单" : `加入选款单${product.recommended_quantity ? ` · ${product.recommended_quantity} 件` : ""}`}
+      </button>
+      <details className="sku-detail">
+        <summary>查看商品与供货详情</summary>
         <dl>
           <div><dt>面料</dt><dd>{product.material}</dd></div>
           <div><dt>版型</dt><dd>{product.silhouette} · {product.fit}</dd></div>
+          <div><dt>渠道</dt><dd>{product.channels.join(" / ")}</dd></div>
           <div><dt>工艺</dt><dd>{product.craft}</dd></div>
-          <div><dt>风格</dt><dd>{product.styles.join(" / ")}</dd></div>
         </dl>
-        <p>{product.description}</p>
       </details>
     </article>
   );
 }
 
-function SubscriptionNotice({ advice }: { advice: NonNullable<Advice["subscription"]> }) {
+function MerchantPanel({ merchant, merchants, onChange }: { merchant: Merchant; merchants: Merchant[]; onChange: (id: string) => void }) {
   return (
-    <section className="subscription-notice" aria-label="BOX+会员提示">
-      <div className="subscription-notice__mark">B+</div>
-      <div>
-        <h3>{advice.title}</h3>
-        <p>{advice.messages.join(" · ")}</p>
-        <button className="quiet-button">{advice.cta}</button>
+    <aside className="merchant-panel" aria-label="商家画像">
+      <div className="panel-label"><span>01</span> 商家画像</div>
+      <label htmlFor="merchant-select">当前演示商家</label>
+      <select id="merchant-select" value={merchant.id} onChange={(event) => onChange(event.target.value)}>
+        {merchants.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}
+      </select>
+      <div className="merchant-name">
+        <strong>{merchant.name}</strong>
+        <span>{merchant.tier}</span>
       </div>
-    </section>
+      <dl className="merchant-facts">
+        <div><dt>经营渠道</dt><dd>{merchant.platform}</dd></div>
+        <div><dt>经营阶段</dt><dd>{merchant.business_stage}</dd></div>
+        <div><dt>目标客群</dt><dd>{merchant.target_customer}</dd></div>
+        <div><dt>零售价带</dt><dd>{formatCurrency(merchant.price_band.min)}–{formatCurrency(merchant.price_band.max)}</dd></div>
+        <div><dt>默认预算</dt><dd>{formatCurrency(merchant.default_budget)}</dd></div>
+      </dl>
+      <p className="merchant-note">切换商家会清空当前结果和选款单，确保价格带与渠道规则不会串用。</p>
+    </aside>
   );
 }
 
-function AssistantResponse({ advice }: { advice: Advice }) {
-  const items = advice.outfit?.items ?? advice.products;
+function SelectionPanel({ items, merchant, onQuantity, onRemove, onHandoff }: {
+  items: SelectionItem[];
+  merchant: Merchant;
+  onQuantity: (sku: string, delta: number) => void;
+  onRemove: (sku: string) => void;
+  onHandoff: () => void;
+}) {
+  const [showSummary, setShowSummary] = useState(false);
+  const totals = useMemo(() => {
+    const units = items.reduce((sum, item) => sum + item.quantity, 0);
+    const cost = items.reduce((sum, item) => sum + item.quantity * item.unitCost, 0);
+    const retail = items.reduce((sum, item) => sum + item.quantity * item.suggested_retail_price, 0);
+    return { units, cost, retail, margin: retail ? (retail - cost) / retail : 0 };
+  }, [items]);
+
   return (
-    <article className="assistant-response">
-      <header className="response-heading">
-        <span>{intentLabel(advice.intent)}</span>
+    <aside className="selection-panel" aria-label="采购清单">
+      <header>
+        <div className="panel-label"><span>04</span> 采购清单</div>
+        <b>{items.length} 款</b>
       </header>
-      <p className="response-copy">{advice.message}</p>
 
-      {items.length > 0 && (
-        <div className={advice.outfit ? "outfit-layout" : "product-rail"}>
-          {items.map((product, index) => (
-            <div className={advice.outfit ? `outfit-item outfit-item--${index + 1}` : ""} key={product.sku}>
-              {advice.outfit && <span className="outfit-role">{index === 0 ? "01 主单品" : `0${index + 1} 搭配`}</span>}
-              <ProductTile product={product} />
+      {items.length ? (
+        <>
+          <div className="selection-items">
+            {items.map((item) => (
+              <article className="selection-row" key={item.sku}>
+                <img src={item.image} alt="" />
+                <div>
+                  <span>{item.selection_role ?? item.default_role}</span>
+                  <strong>{item.name}</strong>
+                  <small>{formatCurrency(item.unitCost)} / 件</small>
+                </div>
+                <div className="quantity-control" aria-label={`${item.name}数量`}>
+                  <button onClick={() => onQuantity(item.sku, -item.moq)} disabled={item.quantity <= item.moq} aria-label={`减少${item.name}数量`}>−</button>
+                  <b>{item.quantity}</b>
+                  <button onClick={() => onQuantity(item.sku, item.moq)} disabled={item.quantity + item.moq > item.stock} aria-label={`增加${item.name}数量`}>+</button>
+                </div>
+                <button className="remove-item" onClick={() => onRemove(item.sku)} aria-label={`从选款单移除${item.name}`}>移除</button>
+              </article>
+            ))}
+          </div>
+
+          <dl className="order-totals">
+            <div><dt>款数 / 件数</dt><dd>{items.length} / {totals.units}</dd></div>
+            <div><dt>预计零售额</dt><dd>{formatCurrency(totals.retail)}</dd></div>
+            <div><dt>预计毛利空间</dt><dd>{formatPercent(totals.margin)}</dd></div>
+            <div className="order-totals__primary"><dt>采购金额</dt><dd>{formatCurrency(totals.cost)}</dd></div>
+          </dl>
+
+          <button className="summary-action" onClick={() => setShowSummary((value) => !value)}>
+            {showSummary ? "收起采购摘要" : "生成采购摘要"}
+          </button>
+
+          {showSummary ? (
+            <div className="purchase-summary" aria-live="polite">
+              <span>采购摘要已就绪</span>
+              <p>{merchant.name} · {merchant.platform}</p>
+              <strong>{items.length} 款 / {totals.units} 件 / {formatCurrency(totals.cost)}</strong>
+              <small>演示清单不会创建真实订单。价格、库存与交期需由销售最终确认。</small>
+              <button onClick={onHandoff}>交给销售确认 <ArrowIcon /></button>
             </div>
-          ))}
+          ) : null}
+        </>
+      ) : (
+        <div className="selection-empty">
+          <span>选款单为空</span>
+          <p>运行组货任务会自动加入建议款；也可以从选款结果逐款添加。</p>
         </div>
       )}
-
-      {advice.outfit && advice.outfit.items.length > 0 && (
-        <div className="outfit-summary">
-          <div>
-            <span>整套说明</span>
-            <p>{advice.outfit.reason}</p>
-          </div>
-          <div>
-            <span>合计</span>
-            <strong>{formatCurrency(advice.outfit.total_price)}</strong>
-          </div>
-        </div>
-      )}
-
-      {advice.subscription && <SubscriptionNotice advice={advice.subscription} />}
-
-      {advice.handoff && (
-        <section className="handoff">
-          <span className="status-dot" />
-          <div><strong>接管摘要已就绪</strong><p>{advice.handoff.summary}</p></div>
-          <span>{advice.handoff.reason}</span>
-        </section>
-      )}
-
-      {advice.evidence.length > 0 && (
-        <details className="decision-proof">
-          <summary>为什么这样推荐</summary>
-          <div className="decision-proof__content">
-            <ol>{advice.evidence.map((item) => <li key={item}>{item}</li>)}</ol>
-            <p>先执行硬条件筛选，再按偏好排序；缺失信息不会被补造。</p>
-          </div>
-        </details>
-      )}
-    </article>
+    </aside>
   );
 }
 
 export function AdvisorApp() {
-  const [members, setMembers] = useState<Member[]>(FALLBACK_MEMBERS);
-  const [memberId, setMemberId] = useState("M-DEMO-01");
-  const [messages, setMessages] = useState<ThreadItem[]>([]);
-  const [input, setInput] = useState("");
+  const [merchants, setMerchants] = useState<Merchant[]>(FALLBACK_MERCHANTS);
+  const [merchantId, setMerchantId] = useState(FALLBACK_MERCHANTS[0].id);
+  const [query, setQuery] = useState("");
+  const [lastQuery, setLastQuery] = useState("");
+  const [advice, setAdvice] = useState<Advice | null>(null);
+  const [selection, setSelection] = useState<SelectionItem[]>([]);
   const [loading, setLoading] = useState(false);
-  const [apiOnline, setApiOnline] = useState<boolean | null>(null);
-  const threadEnd = useRef<HTMLDivElement>(null);
+  const [error, setError] = useState("");
+  const [online, setOnline] = useState(true);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  const currentMember = useMemo(() => members.find((member) => member.id === memberId) ?? members[0], [members, memberId]);
-  const hasStarted = messages.length > 0;
+  const merchant = merchants.find((item) => item.id === merchantId) ?? merchants[0];
+  const resultItems = advice?.assortment?.items ?? advice?.products ?? [];
+  const currentStep = advice?.intent === "handoff" ? 5 : selection.length ? 4 : advice?.intent === "assortment" ? 3 : advice ? 2 : 1;
 
   useEffect(() => {
     Promise.all([
-      fetch(`${API_BASE}/api/health`).then((response) => {
-        if (!response.ok) throw new Error("API unavailable");
-        return response.json();
-      }),
-      fetch(`${API_BASE}/api/members`).then((response) => response.json()),
-    ])
-      .then(([, memberData]) => {
-        setApiOnline(true);
-        setMembers(memberData);
-      })
-      .catch(() => setApiOnline(false));
+      fetch(`${API_BASE}/api/merchants`).then((response) => response.ok ? response.json() : Promise.reject()),
+      fetch(`${API_BASE}/api/health`).then((response) => response.ok ? response.json() : Promise.reject()),
+    ]).then(([merchantData]) => {
+      setMerchants(merchantData);
+      setOnline(true);
+    }).catch(() => setOnline(false));
   }, []);
 
-  useEffect(() => {
-    threadEnd.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  }, [messages, loading]);
+  function changeMerchant(id: string) {
+    setMerchantId(id);
+    setAdvice(null);
+    setSelection([]);
+    setLastQuery("");
+    setError("");
+    requestAnimationFrame(() => inputRef.current?.focus());
+  }
 
-  async function submit(text: string) {
+  function addProduct(product: Product) {
+    setSelection((current) => {
+      if (current.some((item) => item.sku === product.sku)) return current;
+      return [...current, {
+        ...product,
+        quantity: product.recommended_quantity ?? product.moq,
+        unitCost: product.net_unit_cost ?? product.wholesale_price,
+      }];
+    });
+  }
+
+  function replaceWithAssortment(products: Product[]) {
+    setSelection(products.map((product) => ({
+      ...product,
+      quantity: product.recommended_quantity ?? product.moq,
+      unitCost: product.net_unit_cost ?? product.wholesale_price,
+    })));
+  }
+
+  function changeQuantity(sku: string, delta: number) {
+    setSelection((current) => current.map((item) => item.sku === sku
+      ? { ...item, quantity: Math.max(item.moq, Math.min(item.stock, item.quantity + delta)) }
+      : item));
+  }
+
+  async function runTask(text: string, mode = "auto") {
     const clean = text.trim();
     if (!clean || loading) return;
-    const userMessage: ThreadItem = { id: `u-${Date.now()}`, role: "user", text: clean };
-    setMessages((existing) => [...existing, userMessage]);
-    setInput("");
     setLoading(true);
+    setError("");
+    setLastQuery(clean);
     try {
-      const subscriptionAlreadyShown = messages.some((item) => item.role === "assistant" && Boolean(item.advice.subscription));
       const response = await fetch(`${API_BASE}/api/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: clean,
-          member_id: memberId,
-          mode: "auto",
-          subscription_already_shown: subscriptionAlreadyShown,
-        }),
+        body: JSON.stringify({ message: clean, merchant_id: merchantId, mode }),
       });
-      if (!response.ok) throw new Error(`API ${response.status}`);
-      const advice = (await response.json()) as Advice;
-      setMessages((existing) => [...existing, { id: `a-${Date.now()}`, role: "assistant", advice }]);
-      setApiOnline(true);
+      if (!response.ok) throw new Error("request failed");
+      const data: Advice = await response.json();
+      setAdvice(data);
+      if (data.assortment?.items.length) replaceWithAssortment(data.assortment.items);
+      setQuery("");
     } catch {
-      setApiOnline(false);
-      setMessages((existing) => [
-        ...existing,
-        {
-          id: `e-${Date.now()}`,
-          role: "assistant",
-          advice: {
-            intent: "handoff",
-            message: "演示 API 尚未连接。请先按 README 启动 FastAPI 服务，再继续体验完整推荐链路。",
-            products: [], outfit: null, subscription: null,
-            evidence: ["前端运行正常", "API 连接失败", "未发送任何外部请求"],
-            handoff: null,
-          },
-        },
-      ]);
+      setError("服务暂时没有返回结果，请稍后重试。当前选款单已保留。");
+      setOnline(false);
     } finally {
       setLoading(false);
     }
   }
 
-  function onSubmit(event: FormEvent) {
+  function submit(event: FormEvent) {
     event.preventDefault();
-    void submit(input);
+    runTask(query);
   }
 
   return (
-    <div className="app-shell demo-page">
-      <header className="topbar">
-        <a className="wordmark" href="/" aria-label="返回 StyleMate 首页">
-          <span>SM</span>
-          <strong>STYLEMATE</strong>
-          <em>智能时尚顾问</em>
-        </a>
-        <div className="topbar__actions">
-          <a className="back-home" href="/">返回官网</a>
-          <span className="service-status" title={apiOnline === null ? "正在检测服务" : apiOnline ? "服务在线" : "API 未连接"}>
-            <span className={`status-dot ${apiOnline === false ? "status-dot--off" : ""}`} />
-            {apiOnline === false ? "服务未连接" : "服务在线"}
-          </span>
-          <label className="member-control" htmlFor="member">
-            <span>为</span>
-            <select id="member" value={memberId} onChange={(event) => setMemberId(event.target.value)}>
-              {members.map((member) => <option value={member.id} key={member.id}>{member.name}</option>)}
-            </select>
-            <span>推荐</span>
-          </label>
-        </div>
+    <div className="app-shell">
+      <header className="app-topbar">
+        <a className="app-mark" href="/" aria-label="返回产品官网"><span>SM</span><strong>STYLEMATE SUPPLY</strong></a>
+        <div className="app-title"><span>供应商智能选款台</span><b>240 SKU</b></div>
+        <div className="app-status"><i className={online ? "" : "is-offline"} />{online ? "服务在线" : "服务离线"}</div>
       </header>
 
-      <main className="workspace" id="main">
-        {!hasStarted && (
-          <section className="welcome-stage">
-            <p className="welcome-stage__member">已结合 {currentMember?.name} 的尺码、风格偏好与会员状态</p>
-            <h1>今天想怎么穿？</h1>
-            <p className="welcome-stage__copy">描述场合、风格、版型或预算，我会筛出合适单品，也能围绕指定款完成整套搭配。</p>
-            <form className="composer composer--welcome" onSubmit={onSubmit}>
-              <div>
+      <nav className="flow-nav" aria-label="选款流程">
+        {FLOW_STEPS.map((step, index) => (
+          <div className={index + 1 < currentStep ? "is-done" : index + 1 === currentStep ? "is-current" : ""} key={step}>
+            <span>{String(index + 1).padStart(2, "0")}</span><b>{step}</b>
+          </div>
+        ))}
+      </nav>
+
+      <div className="workbench-grid">
+        <MerchantPanel merchant={merchant} merchants={merchants} onChange={changeMerchant} />
+
+        <main className="task-panel">
+          {!advice ? (
+            <section className="task-welcome">
+              <p className="eyebrow">02 选款目标</p>
+              <h1>为这家店，选下一批货。</h1>
+              <p>描述渠道、客群、品类、价格带与预算。系统会先筛货，再给出款式结构和建议数量。</p>
+              <form className="task-composer" onSubmit={submit}>
+                <label htmlFor="task-query">输入经营目标</label>
                 <textarea
-                  id="message-welcome"
-                  value={input}
-                  onChange={(event) => setInput(event.target.value)}
+                  id="task-query"
+                  ref={inputRef}
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="例如：淘宝女性通勤店，零售价 300–700 元，选 12 款春季新品，首批预算 3 万"
                   onKeyDown={(event) => {
                     if (event.key === "Enter" && !event.shiftKey) {
                       event.preventDefault();
-                      void submit(input);
+                      runTask(query);
                     }
                   }}
-                  rows={2}
-                  placeholder="例如：想找一件春季通勤的灰色宽松外套，预算 1500 元以内"
-                  aria-label="描述你的穿搭需求"
                 />
-                <button type="submit" disabled={!input.trim() || loading}>开始推荐 <ArrowIcon /></button>
+                <button type="submit" disabled={!query.trim() || loading}>{loading ? "正在分析货盘…" : "开始选款"}<ArrowIcon /></button>
+              </form>
+              <div className="quick-tasks" aria-label="任务示例">
+                <span>直接体验</span>
+                {QUICK_TASKS.map((task) => <button key={task.label} onClick={() => runTask(task.text, task.mode)}>{task.label}</button>)}
               </div>
-            </form>
-            <div className="quick-tasks" aria-label="需求示例">
-              <span>也可以直接试试</span>
-              {QUICK_TASKS.map((task) => (
-                <button key={task.label} onClick={() => void submit(task.text)} disabled={loading}>
-                  {task.label}<ArrowIcon />
-                </button>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {hasStarted && <section className="thread" aria-live="polite" aria-label="导购对话">
-          {messages.map((item) => item.role === "user" ? (
-            <div className="user-message" key={item.id}><span>你的需求</span><p>{item.text}</p></div>
+              {error ? <p className="error-message" role="alert">{error}</p> : null}
+            </section>
           ) : (
-            <AssistantResponse key={item.id} advice={item.advice} />
-          ))}
-          {loading && (
-            <div className="thinking" role="status"><SparkIcon /><span>正在解析硬条件与业务规则</span><i /><i /><i /></div>
-          )}
-          <div ref={threadEnd} />
-        </section>}
+            <section className="task-result">
+              <header className="result-heading">
+                <div>
+                  <p className="eyebrow">{intentLabel(advice.intent)}</p>
+                  <h1>{advice.message}</h1>
+                  <p className="last-query">“{lastQuery}”</p>
+                </div>
+                <button className="new-task" onClick={() => { setAdvice(null); setLastQuery(""); requestAnimationFrame(() => inputRef.current?.focus()); }}>新建任务</button>
+              </header>
 
-        {hasStarted && <form className="composer composer--followup" onSubmit={onSubmit}>
-          <div>
-            <textarea
-              id="message"
-              value={input}
-              onChange={(event) => setInput(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" && !event.shiftKey) {
-                  event.preventDefault();
-                  void submit(input);
-                }
-              }}
-              rows={2}
-              placeholder="继续补充：换成深色，或把整套控制在 3000 元以内"
-            />
-            <button type="submit" disabled={!input.trim() || loading} aria-label="发送需求">发送 <ArrowIcon /></button>
-          </div>
-          <p>Enter 发送 · Shift + Enter 换行</p>
-        </form>}
-      </main>
-      <footer className="app-footer">商品名称与品牌已匿名化 · 推荐依据可随时展开查看</footer>
+              {advice.evidence.length ? (
+                <div className="constraint-strip" aria-label="识别出的条件">
+                  {advice.evidence.map((item) => <span key={item}>{item}</span>)}
+                </div>
+              ) : null}
+
+              {advice.assortment ? (
+                <div className="assortment-summary">
+                  <div><span>候选范围</span><strong>{advice.assortment.available_count} 款</strong></div>
+                  <div><span>AI 建议组货</span><strong>{advice.assortment.summary.style_count} 款 / {advice.assortment.summary.unit_count} 件</strong></div>
+                  <div><span>AI 建议采购额</span><strong>{formatCurrency(advice.assortment.summary.total_cost)}</strong></div>
+                  <div><span>预算余量</span><strong>{formatCurrency(advice.assortment.summary.budget_remaining)}</strong></div>
+                  <div><span>预计毛利空间</span><strong>{formatPercent(advice.assortment.summary.estimated_margin_rate)}</strong></div>
+                </div>
+              ) : null}
+
+              {advice.handoff ? (
+                <div className="handoff-result">
+                  <div><span>05 销售接管</span><strong>{advice.handoff.reason}</strong></div>
+                  <p>{advice.handoff.summary}</p>
+                  <dl><div><dt>接管人</dt><dd>{advice.handoff.owner}</dd></div><div><dt>状态</dt><dd>摘要已就绪</dd></div></dl>
+                  <small>这是演示接管状态，不会发送消息或创建真实订单。</small>
+                </div>
+              ) : null}
+
+              {advice.intent === "account" && advice.merchant ? (
+                <div className="account-result">
+                  <div><span>商家等级</span><strong>{advice.merchant.tier}</strong></div>
+                  <div><span>结算折扣系数</span><strong>{advice.merchant.discount_rate?.toFixed(2)}</strong></div>
+                  <div><span>演示样衣额度</span><strong>{advice.merchant.sample_quota} 件</strong></div>
+                  <div><span>经营渠道</span><strong>{advice.merchant.platform}</strong></div>
+                </div>
+              ) : null}
+
+              {resultItems.length ? (
+                <div className="sku-grid">
+                  {resultItems.map((product) => (
+                    <ProductCard
+                      product={product}
+                      key={product.sku}
+                      selected={selection.some((item) => item.sku === product.sku)}
+                      onAdd={addProduct}
+                    />
+                  ))}
+                </div>
+              ) : null}
+
+              {advice.assortment ? (
+                <details className="decision-proof">
+                  <summary>查看组货方法与业务边界</summary>
+                  <p>{advice.assortment.logic}</p>
+                  <small>商品属性来自匿名化资料；供货价、库存、MOQ、交期、折扣与经营测算均为演示模拟值。</small>
+                </details>
+              ) : null}
+
+              <form className="followup-composer" onSubmit={submit}>
+                <textarea
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="继续补充：只看外套，或把起订量控制在 4 件以内"
+                  aria-label="继续补充选款条件"
+                />
+                <button disabled={!query.trim() || loading}>{loading ? "处理中…" : "继续筛选"}</button>
+              </form>
+              {error ? <p className="error-message" role="alert">{error}</p> : null}
+            </section>
+          )}
+        </main>
+
+        <SelectionPanel
+          items={selection}
+          merchant={merchant}
+          onQuantity={changeQuantity}
+          onRemove={(sku) => setSelection((current) => current.filter((item) => item.sku !== sku))}
+          onHandoff={() => runTask("请联系销售确认这份选款单并锁库存", "auto")}
+        />
+      </div>
     </div>
   );
 }
-
-export default AdvisorApp;

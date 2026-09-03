@@ -8,13 +8,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
-from .engine import MEMBERS, PRODUCTS, handle_request
+from .engine import MERCHANTS, PRODUCTS, handle_request
 
 
 app = FastAPI(
-    title="StyleMate AI API",
-    description="Anonymous, deterministic retail advisor demo API.",
-    version="0.1.0",
+    title="StyleMate Supply API",
+    description="Anonymous, deterministic wholesale assortment workspace API.",
+    version="0.2.0",
 )
 app.add_middleware(
     CORSMiddleware,
@@ -27,38 +27,37 @@ app.add_middleware(
 
 class ChatRequest(BaseModel):
     message: str = Field(min_length=1, max_length=1000)
-    member_id: Optional[str] = None
-    mode: str = Field(default="auto", pattern="^(auto|shopping|outfit|member)$")
-    subscription_already_shown: bool = False
+    merchant_id: Optional[str] = None
+    mode: str = Field(default="auto", pattern="^(auto|selection|assortment|account)$")
 
 
 @app.get("/api/health")
 def health() -> dict[str, object]:
-    return {"status": "ok", "product_count": len(PRODUCTS), "member_count": len(MEMBERS), "data": "anonymized_demo"}
+    return {"status": "ok", "product_count": len(PRODUCTS), "merchant_count": len(MERCHANTS), "data": "anonymized_demo"}
 
 
-@app.get("/api/members")
-def members() -> list[dict[str, object]]:
+@app.get("/api/merchants")
+def merchants() -> list[dict[str, object]]:
     return [
         {
             "id": item["id"],
             "name": item["name"],
+            "platform": item["platform"],
+            "business_stage": item["business_stage"],
+            "target_customer": item["target_customer"],
+            "price_band": item["price_band"],
             "tier": item["tier"],
-            "points": item["points"],
-            "subscription_status": item["subscription_status"],
+            "default_budget": item["default_budget"],
+            "discount_rate": item["discount_rate"],
+            "sample_quota": item["sample_quota"],
         }
-        for item in MEMBERS
+        for item in MERCHANTS
     ]
 
 
 @app.post("/api/chat")
 def chat(payload: ChatRequest) -> dict[str, object]:
-    return handle_request(
-        payload.message.strip(),
-        payload.member_id,
-        payload.mode,
-        payload.subscription_already_shown,
-    )
+    return handle_request(payload.message.strip(), payload.merchant_id, payload.mode)
 
 
 # In production the Vite build is copied into this directory. Keeping the SPA

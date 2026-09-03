@@ -6,13 +6,19 @@ export function formatCurrency(value: number): string {
   }).format(value);
 }
 
-export function intentLabel(intent: string): string {
-  const labels: Record<string, string> = {
-    product_search: "智能导购",
-    outfit: "搭配顾问",
-    member: "会员顾问",
-    handoff: "人工接管",
-  };
-  return labels[intent] ?? "导购任务";
+export function formatPercent(value: number): string {
+  return new Intl.NumberFormat("zh-CN", {
+    style: "percent",
+    maximumFractionDigits: 0,
+  }).format(value);
 }
 
+export function intentLabel(intent: string): string {
+  const labels: Record<string, string> = {
+    selection: "智能选款",
+    assortment: "组货方案",
+    account: "商家政策",
+    handoff: "销售接管",
+  };
+  return labels[intent] ?? "选款任务";
+}

@@ -1,13 +1,18 @@
 export type Product = {
   sku: string;
   style_code: string;
-  brand: string;
+  line: string;
+  audience: string;
   name: string;
+  department: string;
   category: string;
-  price: number;
+  wholesale_price: number;
+  suggested_retail_price: number;
+  margin_rate: number;
   color: string;
   color_family: string;
   material: string;
+  material_family: string;
   silhouette: string;
   fit: string;
   season: string;
@@ -15,43 +20,66 @@ export type Product = {
   craft: string;
   description: string;
   image: string;
-  visual: { tone: string; shape: string };
+  stock: number;
+  moq: number;
+  lead_time_days: number;
+  channels: string[];
+  default_role: string;
+  risk_level: string;
+  data_note: string;
   reasons?: string[];
-  role?: string;
+  selection_role?: string;
+  recommended_quantity?: number;
+  net_unit_cost?: number;
+  line_total?: number;
+};
+
+export type Merchant = {
+  id: string;
+  name: string;
+  platform: string;
+  business_stage: string;
+  target_customer: string;
+  price_band: { min: number; max: number };
+  tier: string;
+  default_budget: number;
+  discount_rate?: number;
+  sample_quota?: number;
+};
+
+export type AssortmentSummary = {
+  style_count: number;
+  unit_count: number;
+  total_cost: number;
+  retail_value: number;
+  estimated_margin_rate: number;
+  budget: number;
+  budget_remaining: number;
+  role_counts: Record<string, number>;
 };
 
 export type Advice = {
-  intent: "product_search" | "outfit" | "member" | "handoff";
+  intent: "selection" | "assortment" | "account" | "handoff";
   message: string;
+  merchant: Merchant | null;
+  parsed: Record<string, string | number | string[] | null>;
   products: Product[];
-  outfit: null | {
+  assortment: null | {
     items: Product[];
-    total_price: number;
-    reason: string;
-    source_type?: string;
-  };
-  subscription: null | {
-    type: string;
-    title: string;
-    messages: string[];
-    cta: string;
+    summary: AssortmentSummary;
+    available_count: number;
+    logic: string;
   };
   evidence: string[];
   handoff: null | {
     reason: string;
     summary: string;
+    owner: string;
     status: string;
   };
 };
 
-export type Member = {
-  id: string;
-  name: string;
-  tier: string | null;
-  points: number;
-  subscription_status: string;
+export type SelectionItem = Product & {
+  quantity: number;
+  unitCost: number;
 };
-
-export type ThreadItem =
-  | { id: string; role: "user"; text: string }
-  | { id: string; role: "assistant"; advice: Advice };
