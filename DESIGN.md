@@ -12,18 +12,18 @@ colors:
   verified-green: "oklch(0.55 0.09 145)"
 typography:
   display:
-    fontFamily: "Noto Serif SC, Songti SC, serif"
-    fontSize: "clamp(2.5rem, 5vw, 5rem)"
-    fontWeight: 500
-    lineHeight: 1.08
-    letterSpacing: "-0.06em"
+    fontFamily: "Avenir Next, Helvetica Neue, PingFang SC, Microsoft YaHei, system-ui, sans-serif"
+    fontSize: "clamp(3rem, 4vw, 4.5rem)"
+    fontWeight: 600
+    lineHeight: 1.12
+    letterSpacing: "-0.045em"
   body:
-    fontFamily: "Avenir Next, Noto Sans SC, PingFang SC, system-ui, sans-serif"
+    fontFamily: "Avenir Next, Helvetica Neue, PingFang SC, Microsoft YaHei, system-ui, sans-serif"
     fontSize: "1rem"
     fontWeight: 400
     lineHeight: 1.7
   label:
-    fontFamily: "Avenir Next, Noto Sans SC, PingFang SC, system-ui, sans-serif"
+    fontFamily: "Avenir Next, Helvetica Neue, PingFang SC, Microsoft YaHei, system-ui, sans-serif"
     fontSize: "0.62rem"
     fontWeight: 700
     lineHeight: 1.4
@@ -107,20 +107,21 @@ components:
 
 ## Typography
 
-**Display Font:** Noto Serif SC（回退 Songti SC 与系统衬线）  
-**Body Font:** Avenir Next（回退 Noto Sans SC、PingFang SC 与系统无衬线）
+**Display Font:** Avenir Next（中文回退 PingFang SC、Microsoft YaHei 与系统无衬线）
+**Body Font:** 与展示字体共用稳定的现代无衬线字体栈
 
-**Character:** 衬线标题提供时尚出版物的判断力，无衬线正文负责工具界面的精确性。二者不混用于同一层级。
+**Character:** 以克制的字重、紧凑字距和明确尺度建立时尚编辑感，而不依赖不同设备表现不稳定的中文衬线回退。标题与正文共用字体骨架，通过层级而非字体冲突区分叙事和操作。
 
 ### Hierarchy
 
-- **Display**（500，响应式 3–6.4rem，1.05）：仅用于首屏问题“今天想怎么穿？”，允许负字距。
-- **Headline**（500，1.15–1.5rem，1.7）：AI 回答、搭配结论与商品详情标题。
+- **Display**（600，响应式 3–4.5rem，1.12）：用于官网首屏；Demo 首问上限 4rem，允许轻微负字距。
+- **Section**（600，响应式 2.3–3.5rem，1.15）：用于官网章节标题，不与 Display 争夺层级。
+- **Headline**（500–600，1.05–1.55rem，1.6–1.68）：AI 回答、搭配结论与商品详情标题。
 - **Title**（600，0.82–1rem，1.4）：商品名、导航能力和区块标题。
 - **Body**（400，0.78–1rem，1.7）：需求、解释与业务说明，正文行长上限 68ch。
 - **Label**（700，0.57–0.66rem，0.10–0.16em）：英文 eyebrow、规则状态和编号，统一大写。
 
-**The Two-Voices Rule.** 衬线负责判断，无衬线负责操作。按钮、输入、导航和状态标签永远不使用衬线。
+**The One-Skeleton Rule.** 叙事与操作共享无衬线骨架；判断由尺寸、字重、留白和颜色表达。按钮、输入、导航和状态标签保持紧凑，不跟随展示标题放大。
 
 ## Elevation
 
