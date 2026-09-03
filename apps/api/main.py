@@ -32,7 +32,7 @@ class ChatRequest(BaseModel):
 
 @app.get("/api/health")
 def health() -> dict[str, object]:
-    return {"status": "ok", "product_count": len(PRODUCTS), "member_count": len(MEMBERS), "data": "synthetic"}
+    return {"status": "ok", "product_count": len(PRODUCTS), "member_count": len(MEMBERS), "data": "anonymized_demo"}
 
 
 @app.get("/api/members")

@@ -9,17 +9,17 @@ const SHOWCASE_PRODUCTS: Product[] = [
   {
     sku: "SKU-DEMO-001", style_code: "STYLE-001", brand: "Brand_A", name: "折线短风衣", category: "外套",
     price: 1390, color: "岩灰", color_family: "灰", material: "棉锦混纺", silhouette: "H型", fit: "宽松", season: "春",
-    styles: ["通勤", "极简"], craft: "隐藏门襟，可调节袖袢", description: "轻量挺括，短款比例适合高腰下装。", visual: { tone: "stone", shape: "jacket" },
+    styles: ["通勤", "极简"], craft: "隐藏门襟，可调节袖袢", description: "轻量挺括，短款比例适合高腰下装。", image: "/images/products/SKU-DEMO-001.jpg", visual: { tone: "stone", shape: "jacket" },
   },
   {
     sku: "SKU-DEMO-003", style_code: "STYLE-003", brand: "Brand_A", name: "高腰弧线长裤", category: "裤子",
     price: 890, color: "燕麦", color_family: "米", material: "精纺羊毛混纺", silhouette: "弧线型", fit: "宽松", season: "四季",
-    styles: ["通勤", "松弛"], craft: "高腰双褶", description: "柔和弧线平衡短外套的结构感。", visual: { tone: "oat", shape: "trouser" },
+    styles: ["通勤", "松弛"], craft: "高腰双褶", description: "柔和弧线平衡短外套的结构感。", image: "/images/products/SKU-DEMO-003.jpg", visual: { tone: "oat", shape: "trouser" },
   },
   {
-    sku: "SKU-DEMO-010", style_code: "STYLE-010", brand: "Brand_C", name: "纸感无领衬衫", category: "上衣",
-    price: 760, color: "暖白", color_family: "白", material: "全棉府绸", silhouette: "直身", fit: "合身", season: "春",
-    styles: ["极简", "通勤"], craft: "无领暗扣", description: "低对比层次让整套更轻，同时保留利落轮廓。", visual: { tone: "chalk", shape: "shirt" },
+    sku: "SKU-DEMO-002", style_code: "STYLE-002", brand: "Brand_A", name: "空气感廓形衬衣", category: "衬衣",
+    price: 790, color: "冷白", color_family: "白", material: "棉麻混纺", silhouette: "H型", fit: "宽松", season: "春",
+    styles: ["极简", "通勤"], craft: "后背活褶，弧形下摆", description: "低对比层次让整套更轻，同时保留利落轮廓。", image: "/images/products/SKU-DEMO-002.jpg", visual: { tone: "chalk", shape: "shirt" },
   },
 ];
 
@@ -180,7 +180,7 @@ export function LandingPage() {
             <p>不是预设问答，也不是静态截图。输入真实需求，系统会调用同一套筛选、搭配与会员规则。</p>
           </div>
           <MiniAdvisor />
-          <p className="synthetic-note">人物、品牌与商品均为虚构；价格和会员信息仅用于展示推荐流程。</p>
+          <p className="synthetic-note">商品名称、品牌与会员信息已匿名化；商品图片来自项目资料，仅用于功能演示。</p>
         </section>
 
         <section className="capabilities-section" id="capabilities">
@@ -270,7 +270,7 @@ export function LandingPage() {
       <footer className="site-footer">
         <a className="site-logo" href="#top"><span>SM</span><strong>STYLEMATE</strong></a>
         <p>匿名时尚零售智能顾问</p>
-        <p>所有人物、品牌与商品均为虚构演示内容</p>
+        <p>商品名称、品牌与会员信息均为匿名演示内容</p>
       </footer>
     </div>
   );

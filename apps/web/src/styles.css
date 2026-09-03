@@ -349,16 +349,12 @@ a { color: inherit; }
 .product-rail { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px 16px; }
 .product-tile { min-width: 0; }
 .product-tile__visual { border: 0; background: transparent; padding: 0; width: 100%; }
-.product-art { position: relative; aspect-ratio: 4 / 5; overflow: hidden; background: color-mix(in oklch, var(--garment) 12%, var(--paper-deep)); }
-.product-art svg { width: 100%; height: 100%; padding: 12% 9% 8%; transition: transform 180ms ease; }
-.product-tile:hover .product-art svg { transform: scale(1.025); }
-.product-art .garment { fill: var(--garment); stroke: color-mix(in oklch, var(--garment) 68%, var(--ink)); stroke-width: 1.25; }
-.product-art .seam { fill: none; stroke: color-mix(in oklch, var(--garment) 42%, var(--ink)); stroke-width: 1.1; }
-.product-art .seam--light { stroke: color-mix(in oklch, var(--garment) 72%, white); }
-.product-art .shadow { fill: color-mix(in oklch, var(--ink) 8%, transparent); }
+.product-art { position: relative; aspect-ratio: 4 / 5; overflow: hidden; background: oklch(0.975 0.006 78); }
+.product-art img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; transition: transform 220ms cubic-bezier(.22, 1, .36, 1); }
+.product-tile:hover .product-art img { transform: scale(1.025); }
 .product-art__index, .product-art__material { position: absolute; z-index: 2; color: var(--muted); font-size: .58rem; letter-spacing: .08em; }
-.product-art__index { top: 12px; left: 12px; }
-.product-art__material { right: 12px; bottom: 10px; }
+.product-art__index { top: 10px; left: 10px; padding: 5px 7px; background: color-mix(in oklch, var(--paper) 90%, transparent); }
+.product-art__material { right: 10px; bottom: 10px; max-width: calc(100% - 20px); padding: 5px 7px; overflow: hidden; background: color-mix(in oklch, var(--paper) 90%, transparent); text-overflow: ellipsis; white-space: nowrap; }
 .product-tile__meta { display: flex; align-items: start; justify-content: space-between; gap: 12px; margin-top: 13px; }
 .product-tile__meta > div { display: grid; gap: 3px; }
 .product-tile__meta span { color: var(--muted); font-size: .64rem; }

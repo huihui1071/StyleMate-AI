@@ -17,32 +17,6 @@ export const QUICK_TASKS = [
   { label: "查看会员权益", text: "看看我的积分和BOX+权益" },
 ];
 
-const TONE_COLORS: Record<string, string> = {
-  stone: "oklch(0.69 0.018 65)",
-  chalk: "oklch(0.93 0.012 80)",
-  charcoal: "oklch(0.31 0.014 55)",
-  silver: "oklch(0.76 0.016 250)",
-  moss: "oklch(0.43 0.065 137)",
-  mint: "oklch(0.75 0.055 158)",
-  sand: "oklch(0.77 0.045 78)",
-  oat: "oklch(0.87 0.035 84)",
-  umber: "oklch(0.38 0.035 57)",
-  navy: "oklch(0.31 0.052 253)",
-  cement: "oklch(0.63 0.012 250)",
-  olive: "oklch(0.47 0.055 107)",
-  ink: "oklch(0.2 0.015 258)",
-  black: "oklch(0.17 0.012 260)",
-  taupe: "oklch(0.68 0.027 70)",
-  lime: "oklch(0.77 0.13 116)",
-  midnight: "oklch(0.25 0.045 250)",
-  rose: "oklch(0.73 0.055 22)",
-  slate: "oklch(0.5 0.027 240)",
-  carbon: "oklch(0.24 0.012 50)",
-  paper: "oklch(0.95 0.008 82)",
-  sky: "oklch(0.77 0.045 235)",
-  oxblood: "oklch(0.35 0.1 25)",
-};
-
 export function ArrowIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -61,45 +35,10 @@ function SparkIcon() {
 }
 
 export function ProductArt({ product, compact = false }: { product: Product; compact?: boolean }) {
-  const fill = TONE_COLORS[product.visual.tone] ?? TONE_COLORS.stone;
-  const dark = ["ink", "black", "navy", "midnight", "carbon", "oxblood", "charcoal", "umber"].includes(product.visual.tone);
-  const shape = product.visual.shape;
   return (
-    <div className={`product-art ${compact ? "product-art--compact" : ""}`} style={{ "--garment": fill } as React.CSSProperties}>
+    <div className={`product-art ${compact ? "product-art--compact" : ""}`}>
       <span className="product-art__index">{product.sku.slice(-3)}</span>
-      <svg viewBox="0 0 240 300" role="img" aria-label={`${product.name}抽象服装图`}>
-        <path className="shadow" d="M55 266c29 16 109 17 137-1 13 9 5 22-9 27-36 12-103 8-132-3-13-6-11-16 4-23Z" />
-        {(shape === "jacket" || shape === "coat" || shape === "blazer") && (
-          <>
-            <path className="garment" d={shape === "coat" ? "M71 54 100 35h40l31 19 24 55-22 10-7-25 13 171H61L74 94l-8 30-23-11Z" : "M69 58 99 37h42l31 21 22 58-22 9-11-33 8 144H69L79 92l-10 36-23-10Z"} />
-            <path className={dark ? "seam seam--light" : "seam"} d="m104 39 16 27 18-27M120 66v165M84 160h23M135 160h23" />
-          </>
-        )}
-        {(shape === "shirt" || shape === "tee" || shape === "sweat" || shape === "knit" || shape === "top" || shape === "vest") && (
-          <>
-            <path className="garment" d={shape === "vest" ? "M88 52 106 36h28l19 16 21 181H68Z" : "M82 54 105 36h30l24 18 46 39-25 30-19-18 11 127H68l11-127-19 18-25-30Z"} />
-            <path className={dark ? "seam seam--light" : "seam"} d={shape === "shirt" ? "m106 38 14 25 15-25M120 63v164M87 111h66" : "M107 39c3 20 23 20 27 0M82 206h79"} />
-          </>
-        )}
-        {(shape === "trouser" || shape === "short") && (
-          <>
-            <path className="garment" d={shape === "short" ? "M71 53h98l15 106-51 8-13-62-13 62-51-8Z" : "M67 51h106l11 214-49 3-15-132-15 132-49-3Z"} />
-            <path className={dark ? "seam seam--light" : "seam"} d="M74 79h92M120 53v83M91 57l8 36M149 57l-8 36" />
-          </>
-        )}
-        {shape === "skirt" && (
-          <>
-            <path className="garment" d="M80 49h80l29 216H51Z" />
-            <path className={dark ? "seam seam--light" : "seam"} d="M82 79h76M120 51l-10 211" />
-          </>
-        )}
-        {shape === "dress" && (
-          <>
-            <path className="garment" d="M94 39h52l19 49-21 35 48 142H48l48-142-21-35Z" />
-            <path className={dark ? "seam seam--light" : "seam"} d="M96 42c6 20 42 20 48 0M82 115h76M119 63l1 197" />
-          </>
-        )}
-      </svg>
+      <img src={product.image} alt={`${product.name}商品实拍图`} loading="lazy" decoding="async" />
       <span className="product-art__material">{product.material}</span>
     </div>
   );
@@ -374,7 +313,7 @@ export function AdvisorApp() {
           <p>Enter 发送 · Shift + Enter 换行</p>
         </form>}
       </main>
-      <footer className="app-footer">商品与人物均为虚构 · 推荐依据可随时展开查看</footer>
+      <footer className="app-footer">商品名称与品牌已匿名化 · 推荐依据可随时展开查看</footer>
     </div>
   );
 }

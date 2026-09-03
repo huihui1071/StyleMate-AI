@@ -1,9 +1,18 @@
 import unittest
+from pathlib import Path
 
-from apps.api.engine import build_outfit, handle_request, parse_query, search_products, subscription_advice
+from apps.api.engine import PRODUCTS, build_outfit, handle_request, parse_query, search_products, subscription_advice
 
 
 class RecommendationEngineTests(unittest.TestCase):
+    def test_every_product_has_a_local_real_image(self):
+        project_root = Path(__file__).resolve().parents[1]
+        self.assertEqual(len(PRODUCTS), 24)
+        for product in PRODUCTS:
+            image_path = product.get("image", "")
+            self.assertTrue(image_path.startswith("/images/products/"))
+            self.assertTrue((project_root / "apps/web/public" / image_path.lstrip("/")).is_file())
+
     def test_parses_compound_hard_filters(self):
         parsed = parse_query("想找春季通勤的灰色宽松外套，预算1500元以内")
         self.assertEqual(parsed.category, "外套")

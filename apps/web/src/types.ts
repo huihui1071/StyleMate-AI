@@ -14,6 +14,7 @@ export type Product = {
   styles: string[];
   craft: string;
   description: string;
+  image: string;
   visual: { tone: string; shape: string };
   reasons?: string[];
   role?: string;
@@ -54,4 +55,3 @@ export type Member = {
 export type ThreadItem =
   | { id: string; role: "user"; text: string }
   | { id: string; role: "assistant"; advice: Advice };
-
