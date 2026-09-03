@@ -21,7 +21,15 @@ def _load(name: str) -> Any:
 PRODUCTS: list[dict[str, Any]] = _load("products.json")
 MERCHANTS: list[dict[str, Any]] = _load("merchants.json")
 PRODUCT_BY_SKU = {item["sku"]: item for item in PRODUCTS}
-MERCHANT_BY_ID = {merchant["id"]: merchant for merchant in MERCHANTS}
+MERCHANT_BY_KEY = {
+    key: merchant
+    for merchant in MERCHANTS
+    for key in (merchant["id"], merchant["name"])
+}
+
+
+def _resolve_merchant(merchant_key: str | None) -> dict[str, Any] | None:
+    return MERCHANT_BY_KEY.get(merchant_key or "")
 
 
 DEPARTMENT_ALIASES = {
@@ -294,7 +302,7 @@ def _score(product: dict[str, Any], parsed: ParsedQuery, merchant: dict[str, Any
 
 def search_products(query: str, merchant_id: str | None = None, limit: int = 12) -> dict[str, Any]:
     parsed = parse_query(query)
-    merchant = MERCHANT_BY_ID.get(merchant_id or "")
+    merchant = _resolve_merchant(merchant_id)
     matches = [product for product in PRODUCTS if _hard_match(product, parsed, merchant)]
     ranked = []
     for product in matches:
@@ -337,7 +345,7 @@ def _quantity_for(product: dict[str, Any], role: str) -> int:
 
 
 def build_assortment(query: str, merchant_id: str | None = None) -> dict[str, Any]:
-    merchant = MERCHANT_BY_ID.get(merchant_id or "")
+    merchant = _resolve_merchant(merchant_id)
     parsed = parse_query(query)
     result = search_products(query, merchant_id, limit=100)
     target_count = parsed.target_count or 12
@@ -443,7 +451,7 @@ def _merchant_context(merchant: dict[str, Any] | None) -> dict[str, Any] | None:
 
 
 def handle_request(query: str, merchant_id: str | None = None, mode: str = "auto") -> dict[str, Any]:
-    merchant = MERCHANT_BY_ID.get(merchant_id or "")
+    merchant = _resolve_merchant(merchant_id)
     parsed = parse_query(query)
     handoff_reason = _handoff_reason(query)
     if handoff_reason:

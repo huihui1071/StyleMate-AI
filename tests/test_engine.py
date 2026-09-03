@@ -82,6 +82,11 @@ class AssortmentEngineTests(unittest.TestCase):
         self.assertEqual(result["merchant"]["name"], "留白买手店")
         self.assertEqual(result["merchant"]["sample_quota"], 10)
 
+    def test_dify_can_select_merchant_by_display_name(self):
+        result = handle_request("查看拿货政策和样衣额度", "留白买手店", "account")
+        self.assertEqual(result["merchant"]["id"], "MERCHANT-DEMO-03")
+        self.assertEqual(result["merchant"]["name"], "留白买手店")
+
     def test_transaction_request_creates_sales_handoff(self):
         result = handle_request("请联系销售确认实时库存并锁货", "MERCHANT-DEMO-01")
         self.assertEqual(result["intent"], "handoff")
