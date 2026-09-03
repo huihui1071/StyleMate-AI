@@ -76,12 +76,26 @@ export function LandingPage() {
           </div>
 
           <div className="hero-catalog" aria-label="匿名商品货盘预览">
-            {HERO_PRODUCTS.map((product, index) => (
-              <figure key={product.sku} className={`hero-product hero-product--${index + 1}`}>
-                <img src={product.image} alt={`${product.label}匿名商品图`} />
-                <figcaption><span>{product.label}</span><b>#{product.sku}</b></figcaption>
-              </figure>
-            ))}
+            <div className="hero-catalog__header">
+              <div>
+                <span>春季通勤组货</span>
+                <strong>首轮候选</strong>
+              </div>
+              <b>04 / 12</b>
+            </div>
+            <div className="hero-catalog__products">
+              {HERO_PRODUCTS.map((product, index) => (
+                <figure key={product.sku} className={`hero-product hero-product--${index + 1}`}>
+                  <img src={product.image} alt={`${product.label}匿名商品图`} />
+                  <figcaption><span>{product.label}</span><b>#{product.sku}</b></figcaption>
+                </figure>
+              ))}
+            </div>
+            <dl className="hero-catalog__summary" aria-label="组货预览摘要">
+              <div><dt>目标价格带</dt><dd>¥300–¥700</dd></div>
+              <div><dt>预计毛利</dt><dd>56%</dd></div>
+              <div><dt>采购预算</dt><dd>¥30,000</dd></div>
+            </dl>
           </div>
         </section>
 
