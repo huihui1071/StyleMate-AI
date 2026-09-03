@@ -68,11 +68,6 @@ export function LandingPage() {
               <a className="primary-action" href="/demo">开始一次选款 <ArrowIcon /></a>
               <a className="text-link" href="#workflow">查看决策路径</a>
             </div>
-            <dl className="catalog-line" aria-label="演示货盘范围">
-              <div><dt>货盘</dt><dd>240 款匿名 SKU</dd></div>
-              <div><dt>覆盖</dt><dd>22 个真实品类</dd></div>
-              <div><dt>素材</dt><dd>240 张本地商品图</dd></div>
-            </dl>
           </div>
 
           <div className="hero-catalog" aria-label="匿名商品货盘预览">
@@ -97,11 +92,6 @@ export function LandingPage() {
               <div><dt>采购预算</dt><dd>¥30,000</dd></div>
             </dl>
           </div>
-        </section>
-
-        <section className="buyer-statement">
-          <p>不是让模型凭感觉挑几张图。</p>
-          <h2>先判断哪些货能卖，再判断这一批货该怎么组。</h2>
         </section>
 
         <section className="product-section" id="product">
