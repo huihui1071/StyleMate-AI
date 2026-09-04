@@ -150,7 +150,6 @@ function SelectionPanel({ items, merchant, onQuantity, onRemove, onHandoff }: {
               <span>采购摘要已就绪</span>
               <p>{merchant.name} · {merchant.platform}</p>
               <strong>{items.length} 款 / {totals.units} 件 / {formatCurrency(totals.cost)}</strong>
-              <small>演示清单不会创建真实订单。价格、库存与交期需由销售最终确认。</small>
               <button onClick={onHandoff}>交给销售确认 <ArrowIcon /></button>
             </div>
           ) : null}
