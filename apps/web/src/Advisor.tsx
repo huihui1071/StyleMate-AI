@@ -72,7 +72,6 @@ function ProductCard({ product, selected, onAdd }: { product: Product; selected:
 function MerchantPanel({ merchant, merchants, onChange }: { merchant: Merchant; merchants: Merchant[]; onChange: (id: string) => void }) {
   return (
     <aside className="merchant-panel" aria-label="商家画像">
-      <div className="panel-label"><span>01</span> 商家画像</div>
       <label htmlFor="merchant-select">当前演示商家</label>
       <select id="merchant-select" value={merchant.id} onChange={(event) => onChange(event.target.value)}>
         {merchants.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}
@@ -88,7 +87,6 @@ function MerchantPanel({ merchant, merchants, onChange }: { merchant: Merchant; 
         <div><dt>零售价带</dt><dd>{formatCurrency(merchant.price_band.min)}–{formatCurrency(merchant.price_band.max)}</dd></div>
         <div><dt>默认预算</dt><dd>{formatCurrency(merchant.default_budget)}</dd></div>
       </dl>
-      <p className="merchant-note">切换商家会清空当前结果和选款单，确保价格带与渠道规则不会串用。</p>
     </aside>
   );
 }
