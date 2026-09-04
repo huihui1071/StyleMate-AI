@@ -47,6 +47,7 @@ svg{width:16px;fill:none;stroke:currentColor;stroke-width:1.8}:focus-visible{out
 .merchant-panel,.selection-panel{top:62px;height:calc(100vh - 76px)}
 .task-welcome{min-height:calc(100vh - 76px)}
 .merchant-panel>label{margin-top:0}
+.task-welcome h1{margin-top:0}
 @media(max-width:760px){.flow-nav{top:0}}
 
 .quick-tasks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:18px}

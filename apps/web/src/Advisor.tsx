@@ -112,7 +112,7 @@ function SelectionPanel({ items, merchant, onQuantity, onRemove, onHandoff }: {
   return (
     <aside className="selection-panel" aria-label="采购清单">
       <header>
-        <div className="panel-label"><span>04</span> 采购清单</div>
+        <div className="panel-label">采购清单</div>
         <b>{items.length} 款</b>
       </header>
 
@@ -267,8 +267,7 @@ export function AdvisorApp() {
         <main className="task-panel">
           {!advice ? (
             <section className="task-welcome">
-              <p className="eyebrow">02 选款目标</p>
-              <h1>为这家店，选下一批货。</h1>
+              <h1>为你的店，选一批货。</h1>
               <p>描述渠道、客群、品类、价格带与预算。系统会先筛货，再给出款式结构和建议数量。</p>
               <form className="task-composer" onSubmit={submit}>
                 <label htmlFor="task-query">输入经营目标</label>
