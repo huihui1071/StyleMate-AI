@@ -325,10 +325,19 @@ export function AdvisorApp() {
 
               {advice.handoff ? (
                 <div className="handoff-result">
-                  <div><span>05 销售接管</span><strong>{advice.handoff.reason}</strong></div>
-                  <p>{advice.handoff.summary}</p>
-                  <dl><div><dt>接管人</dt><dd>{advice.handoff.owner}</dd></div><div><dt>状态</dt><dd>摘要已就绪</dd></div></dl>
-                  <small>这是演示接管状态，不会发送消息或创建真实订单。</small>
+                  <header className="handoff-result__header">
+                    <div>
+                      <span>销售接管</span>
+                      <h2>接管信息已整理</h2>
+                    </div>
+                    <b>待销售确认</b>
+                  </header>
+                  <p className="handoff-result__summary">{advice.handoff.summary}</p>
+                  <dl>
+                    <div><dt>负责跟进</dt><dd>{advice.handoff.owner}</dd></div>
+                    <div><dt>当前进度</dt><dd>等待销售确认</dd></div>
+                  </dl>
+                  <button className="new-task handoff-result__action" onClick={() => { setAdvice(null); setLastQuery(""); requestAnimationFrame(() => inputRef.current?.focus()); }}>新建选款任务</button>
                 </div>
               ) : null}
 
