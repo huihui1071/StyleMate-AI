@@ -12,9 +12,12 @@ const FALLBACK_MERCHANTS: Merchant[] = [
 ];
 
 const QUICK_TASKS = [
-  { label: "春季首批组货", mode: "assortment", text: "我在淘宝做女性通勤装，零售价300-700元，想选12款春季新品，首批采购预算3万" },
-  { label: "低 MOQ 选款", mode: "selection", text: "帮我选女装春季上装，零售价300-700元，起订量不超过4件" },
-  { label: "查看拿货政策", mode: "account", text: "查看当前商家的拿货政策、折扣和样衣额度" },
+  { label: "想选一些适合春季上新的女装。", mode: "selection", text: "想选一些适合春季上新的女装" },
+  { label: "帮我选春季外套，单款起订量不超过 4 件。", mode: "selection", text: "帮我选春季外套，单款起订量不超过4件" },
+  { label: "淘宝女性通勤店，零售价 300–700 元，帮我选一批春季新品。", mode: "selection", text: "我在淘宝做女性通勤装，零售价300-700元，帮我选一批春季新品" },
+  { label: "抖音女装店，客群 20–30 岁，想选低 MOQ 的春季新品，预算 2 万。", mode: "assortment", text: "我在抖音做20-30岁女性客群，想选低MOQ的春季新品，采购预算2万" },
+  { label: "淘宝通勤女装店，零售价 300–700 元，选 12 款春季新品，首批预算 3 万。", mode: "assortment", text: "我在淘宝做女性通勤装，零售价300-700元，想选12款春季新品，首批采购预算3万" },
+  { label: "我想确认当前商家的拿货折扣、样衣额度和默认采购预算。", mode: "account", text: "查看当前商家的拿货折扣、样衣额度和默认采购预算" },
 ] as const;
 
 const FLOW_STEPS = ["商家画像", "选款", "组货", "采购清单", "销售接管"];
@@ -285,7 +288,7 @@ export function AdvisorApp() {
                 <button type="submit" disabled={!query.trim() || loading}>{loading ? "正在分析货盘…" : "开始选款"}<ArrowIcon /></button>
               </form>
               <div className="quick-tasks" aria-label="任务示例">
-                <span>直接体验</span>
+                <span>直接体验这些需求</span>
                 {QUICK_TASKS.map((task) => <button key={task.label} onClick={() => runTask(task.text, task.mode)}>{task.label}</button>)}
               </div>
               {error ? <p className="error-message" role="alert">{error}</p> : null}
