@@ -294,19 +294,23 @@ export function AdvisorApp() {
             </section>
           ) : (
             <section className="task-result">
-              <header className="result-heading">
-                <div>
-                  <p className="eyebrow">{intentLabel(advice.intent)}</p>
-                  <h1>{advice.message}</h1>
-                  <p className="last-query">“{lastQuery}”</p>
-                </div>
-                <button className="new-task" onClick={() => { setAdvice(null); setLastQuery(""); requestAnimationFrame(() => inputRef.current?.focus()); }}>新建任务</button>
-              </header>
+              {advice.intent !== "handoff" ? (
+                <>
+                  <header className="result-heading">
+                    <div>
+                      <p className="eyebrow">{intentLabel(advice.intent)}</p>
+                      <h1>{advice.message}</h1>
+                      <p className="last-query">“{lastQuery}”</p>
+                    </div>
+                    <button className="new-task" onClick={() => { setAdvice(null); setLastQuery(""); requestAnimationFrame(() => inputRef.current?.focus()); }}>新建任务</button>
+                  </header>
 
-              {advice.evidence.length ? (
-                <div className="constraint-strip" aria-label="识别出的条件">
-                  {advice.evidence.map((item) => <span key={item}>{item}</span>)}
-                </div>
+                  {advice.evidence.length ? (
+                    <div className="constraint-strip" aria-label="识别出的条件">
+                      {advice.evidence.map((item) => <span key={item}>{item}</span>)}
+                    </div>
+                  ) : null}
+                </>
               ) : null}
 
               {advice.assortment ? (
