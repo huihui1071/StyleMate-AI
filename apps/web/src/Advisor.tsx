@@ -176,7 +176,6 @@ export function AdvisorApp() {
   const [selection, setSelection] = useState<SelectionItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [online, setOnline] = useState(true);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const merchant = merchants.find((item) => item.id === merchantId) ?? merchants[0];
@@ -184,13 +183,9 @@ export function AdvisorApp() {
   const currentStep = advice?.intent === "handoff" ? 5 : selection.length ? 4 : advice?.intent === "assortment" ? 3 : advice ? 2 : 1;
 
   useEffect(() => {
-    Promise.all([
-      fetch(`${API_BASE}/api/merchants`).then((response) => response.ok ? response.json() : Promise.reject()),
-      fetch(`${API_BASE}/api/health`).then((response) => response.ok ? response.json() : Promise.reject()),
-    ]).then(([merchantData]) => {
+    fetch(`${API_BASE}/api/merchants`).then((response) => response.ok ? response.json() : Promise.reject()).then((merchantData) => {
       setMerchants(merchantData);
-      setOnline(true);
-    }).catch(() => setOnline(false));
+    }).catch(() => undefined);
   }, []);
 
   function changeMerchant(id: string) {
@@ -246,7 +241,6 @@ export function AdvisorApp() {
       setQuery("");
     } catch {
       setError("服务暂时没有返回结果，请稍后重试。当前选款单已保留。");
-      setOnline(false);
     } finally {
       setLoading(false);
     }
@@ -259,12 +253,6 @@ export function AdvisorApp() {
 
   return (
     <div className="app-shell">
-      <header className="app-topbar">
-        <a className="app-mark" href="/" aria-label="返回产品官网"><span>SM</span><strong>STYLEMATE SUPPLY</strong></a>
-        <div className="app-title"><span>供应商智能选款台</span><b>240 SKU</b></div>
-        <div className="app-status"><i className={online ? "" : "is-offline"} />{online ? "服务在线" : "服务离线"}</div>
-      </header>
-
       <nav className="flow-nav" aria-label="选款流程">
         {FLOW_STEPS.map((step, index) => (
           <div className={index + 1 < currentStep ? "is-done" : index + 1 === currentStep ? "is-current" : ""} key={step}>
